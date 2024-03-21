@@ -27,6 +27,23 @@ def find_legal_moves(map, pos, goal):
     return moves
 
 
+def find_legal_moves_down(map, pos, goal):
+    moves = []
+    if pos[0] > 0:
+        if (map[pos[0], pos[1]] - map[pos[0]-1, pos[1]]) <= 1:
+            moves.append([pos[0]-1, pos[1]])
+    if pos[0] < map.shape[0]-1:
+        if (map[pos[0], pos[1]] - map[pos[0]+1, pos[1]]) <= 1:
+            moves.append([pos[0]+1, pos[1]])
+    if pos[1] > 0:
+        if (map[pos[0], pos[1]] - map[pos[0], pos[1]-1]) <= 1:
+            moves.append([pos[0], pos[1]-1])
+    if pos[1] < map.shape[1]-1:
+        if (map[pos[0], pos[1]] - map[pos[0], pos[1]+1]) <= 1:
+            moves.append([pos[0], pos[1]+1])
+    return moves
+
+
 heightmap = np.zeros((len(data), len(data[0])))
 for i in range(heightmap.shape[0]):
     for j in range(heightmap.shape[1]):
@@ -58,90 +75,28 @@ for step in range(len(heightmap.flatten())):
         break
 
 print(int(score_map[end[0], end[1]]))
+done = False
 
-scores = [int(score_map[end[0], end[1]])]
-start_points = heightmap == 0
-tested = np.zeros(heightmap.shape)
-previous_step = np.inf * np.ones(heightmap.shape)
+score_map = np.inf*np.ones(heightmap.shape, np.int)
+score = '114'
+for step in range(len(heightmap.flatten())):
+    if step == 0:
+        score_map[end[0], end[1]] = 0
 
-for x in range(heightmap.shape[0]):
-    for y in range(heightmap.shape[1]):
-        if not start_points[x, y]:
-            continue
-        done = False
-        score_map = np.inf*np.ones(heightmap.shape, np.int)
-        for step in range(len(heightmap.flatten())):
-            if step == 0:
-                score_map[x, y] = 0
-            if step >= min(scores):
-                break
-            to_check = score_map == step
-            for i in range(heightmap.shape[0]):
-                for j in range(heightmap.shape[1]):
-                    if not to_check[i, j] or\
-                            score_map[i, j] > 1+previous_step[i, j] or \
-                            done:
-                        continue
-                    legal_moves = find_legal_moves(heightmap, (i, j), end)
-                    for legal_move in legal_moves:
-                        if not score_map[
-                                legal_move[0],
-                                legal_move[1]
-                                ] > step+1 or\
-                                tested[
-                                legal_move[0],
-                                legal_move[1]
-                                ] == 1:
-                            continue
-                        score_map[legal_move[0], legal_move[1]] = step+1
-                        if end[0] == legal_move[0] and\
-                                end[1] == legal_move[1]:
-                            done = True
-                            scores.append(step + 1)
-                            previous_step = np.min([previous_step, score_map],
-                                                   axis=0)
-        tested[x, y] = 1
+    to_check = score_map == step
+    for i in range(heightmap.shape[0]):
+        for j in range(heightmap.shape[1]):
+            if not to_check[i, j] or done:
+                continue
+            legal_moves = find_legal_moves_down(heightmap, (i, j), start)
+            for legal_move in legal_moves:
+                if not score_map[legal_move[0], legal_move[1]] > step+1:
+                    continue
+                score_map[legal_move[0], legal_move[1]] = step+1
+                if heightmap[legal_move[0], legal_move[1]] == 0:
+                    done = True
+                    score = step + 1
+    if done:
+        break
+print(score)
 
-
-for x in range(heightmap.shape[0]):
-    for y in range(heightmap.shape[1]):
-        if not start_points[x, y]:
-            continue
-        done = False
-        score_map = np.inf*np.ones(heightmap.shape, np.int)
-        for step in range(len(heightmap.flatten())):
-            if step == 0:
-                score_map[x, y] = 0
-            if step >= min(scores):
-                break
-            to_check = score_map == step
-            for i in range(heightmap.shape[0]):
-                for j in range(heightmap.shape[1]):
-                    if not to_check[i, j] or\
-                            score_map[i, j] > 1+previous_step[i, j] or \
-                            done:
-                        continue
-                    legal_moves = find_legal_moves(heightmap, (i, j), end)
-                    for legal_move in legal_moves:
-                        if not score_map[
-                                legal_move[0],
-                                legal_move[1]
-                                ] > step+1 or\
-                                tested[
-                                legal_move[0],
-                                legal_move[1]
-                                ] == 1:
-                            continue
-                        score_map[legal_move[0], legal_move[1]] = step+1
-                        if end[0] == legal_move[0] and\
-                                end[1] == legal_move[1]:
-                            done = True
-                            scores.append(step + 1)
-                            previous_step = np.min(
-                                    [previous_step, score_map],
-                                    axis=0
-                                    )
-        tested[x, y] = 1
-
-print(min(scores))
-print(scores)
