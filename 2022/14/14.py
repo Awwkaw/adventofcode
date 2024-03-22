@@ -8,9 +8,9 @@ ymax = None
 def grid_simulate(grid, start):
     coord = start
     if grid[start[0]][start[1]] == 'O':
-        return None
+        return grid, None
     while True:
-        if coord[0]+1 > len(grid):
+        if coord[0]+1 >= len(grid):
             return grid, None
         elif grid[coord[0]+1][coord[1]] == ' ':
             start = [coord[0], coord[1]]
@@ -24,7 +24,7 @@ def grid_simulate(grid, start):
             coord = [coord[0]+1, coord[1]-1]
             continue
 
-        if coord[1]+1 > len(grid[0]):
+        if coord[1]+1 >= len(grid[0]):
             return grid, None
         elif grid[coord[0]+1][coord[1]+1] == ' ':
             start = [coord[0], coord[1]]
@@ -86,10 +86,7 @@ n = 0
 start = [0, 500-xmin]
 newstart = start
 while True:
-    try:
-        grid, newstart = grid_simulate(grid, start)
-    except Exception:
-        break
+    grid, newstart = grid_simulate(grid, start)
     if newstart is not None:
         n += 1
         if grid[newstart[0]][newstart[1]] != ' ':
